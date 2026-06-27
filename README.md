@@ -51,3 +51,43 @@ Two models are trained and compared:
 - Weighted CrossEntropyLoss to handle class imbalance
 
 ### Model 2 — BiomedCLIP Hybrid (Main Model)
+
+### Overview
+The hybrid model addresses medical VQA by combining three powerful components:
+**vision-language understanding**, **medical knowledge graph reasoning**, and 
+**attention-based graph context fusion** — all working together to produce a final answer.
+
+---
+
+### 🧩 Components
+
+#### 1. BiomedCLIP — Vision + Language Encoder (Frozen)
+- Pretrained model: `microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224`
+- Vision encoder: **ViT-B/16** (Vision Transformer, 16×16 patch size, 224×224 input)
+- Text encoder: **PubMedBERT** (trained on biomedical literature)
+- Both encoders are **completely frozen** during training — only the projection layers learn
+- Outputs normalized 512-dim image and text feature vectors
+- Projected down to **256-dim** via learnable Linear + GELU + Dropout layers
+
+#### 2. RotatE — Knowledge Graph Embedding
+- Encodes medical entities (organs, modalities, diseases, intents) as complex-number vectors
+- Each entity has a **real part** and an **imaginary part** (128-dim each)
+- Relations are encoded as **rotation angles** in complex space
+- Triple scoring formula: `score(h, r, t) = -‖ h ∘ r - t ‖²`  
+  where `∘` = complex rotation
+- Trained using **margin-based loss** on positive vs negative triples:
+  `kg_loss = ReLU(1 - positive_score + negative_score)`
+- Purpose: teaches the model the relationships between medical concepts
+
+#### 3. QuestionGuidedGAT — Graph Attention Network
+- Receives a **subgraph** built from the question's intent, predicted organ, and modality
+- Node features come from RotatE entity embeddings (128-dim)
+- The **query vector** = concatenation of image + text features (512-dim) — this guides attention
+- Attention scores computed as:
+  `score = softmax( (nodes + query) × nodes_T / √dim )`
+- Masked attention: only connected nodes (per adjacency matrix) can attend to each other
+- Output: single pooled 128-dim graph context vector
+
+--
+
+
