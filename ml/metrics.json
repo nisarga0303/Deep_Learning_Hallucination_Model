@@ -1,0 +1,14 @@
+{
+  "traditional": {
+    "answer_accuracy": 0.0,
+    "organ_accuracy": 0.9787701317715959,
+    "modality_accuracy": 1.0,
+    "overall_accuracy": 0.6595900439238653
+  },
+  "hybrid": {
+    "answer_accuracy": 0.40043923865300146,
+    "organ_accuracy": 0.9494875549048316,
+    "modality_accuracy": 1.0,
+    "overall_accuracy": 0.7833089311859444
+  }
+}
